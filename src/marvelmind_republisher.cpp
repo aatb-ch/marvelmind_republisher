@@ -14,6 +14,16 @@ ros::Publisher pub_pose;
 long count_imu = 0;
 long count_pose = 0;
 
+// convert raw IMU value from G to m/s
+float g2ms(int val){
+    return val * 9.80665 / 1000;
+}
+
+// convert raw IMU value from 0.0175deg/unit to rad
+float d2rad(int val){
+    return val * 0.0175 * (3.1416 / 180);
+}
+
 void imuCallback(const marvelmind_nav::hedge_imu_raw::ConstPtr& msg)
 {
     ros::Time current_time;
@@ -48,22 +58,12 @@ void poseCallback(const marvelmind_nav::hedge_pos_ang::ConstPtr& msg)
     msg_pose.header.frame_id = "hedgehog_link";
     
     msg_pose.pose.pose.position.x = msg->x_m;
-    msg_pose.pose.pose.position.y = msg->x_y;
-    msg_pose.pose.pose.position.z = msg->x_z;
+    msg_pose.pose.pose.position.y = msg->y_m;
+    msg_pose.pose.pose.position.z = msg->z_m;
 
     msg_pose.pose.pose.orientation = tf::createQuaternionMsgFromYaw(msg->angle);
 
     pub_pose.publish(msg_pose);
-}
-
-// convert raw IMU value from G to m/s
-float64 g2ms(int16 val){
-    return val * 9.80665 / 1000;
-}
-
-// convert raw IMU value from 0.0175deg/unit to rad
-float64 d2rad(int16 val){
-    return val * 0.0175 * (3.1416 / 180);
 }
 
 int main(int argc, char **argv)
@@ -72,14 +72,14 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;
 
     // subscribe to topics
-    sub_imu = nh.subscribe<marvelmind_nav::hedge_imu_raw>("hedge_imu_raw", 1, imuCallback, this)
-    sub_imu = nh.subscribe<marvelmind_nav::hedge_pos_ang>("hedge_pos_ang", 1, poseCallback, this)
+    sub_imu = nh.subscribe<marvelmind_nav::hedge_imu_raw>("hedge_imu_raw", 1, imuCallback);
+    sub_imu = nh.subscribe<marvelmind_nav::hedge_pos_ang>("hedge_pos_ang", 1, poseCallback);
 
     // advertise topics
 	pub_imu = nh.advertise<sensor_msgs::Imu>("hedge_imu", 1); // imu1 in case there is already an internal IMU topic
 	pub_pose = nh.advertise<geometry_msgs::PoseWithCovarianceStamped>("hedge_pose", 1);
 
-	ros::spin()
+	ros::spin();
 
     return 0;
 }
