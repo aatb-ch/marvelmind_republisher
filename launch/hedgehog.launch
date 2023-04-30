@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="marvelmind_republisher" name="marvelmind_republisher" type="marvelmind_republisher" output="screen"></node>
+</launch>
